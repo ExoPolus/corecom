@@ -1,28 +1,28 @@
-package com.exoself.corecom.dht;
+package com.exopolus.corecom.dht;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 
 public class RoutingTable {
-    private NodeID id;
+    private Contact node;
     // TODO: This isn't the best data structure for this. But no optimize now.
     private ArrayList[] buckets = new ArrayList[DHTConstants.ID_LENGTH * 8];
 
-    public RoutingTable(NodeID id) {
-        this.id = id;
+    public RoutingTable(Contact id) {
+        this.setNode(id);
         for (int i = 0; i < DHTConstants.ID_LENGTH * 8; i++) {
             buckets[i] = new ArrayList<>();
         }
     }
 
     public void update(Contact contact) {
-        int prefixLength = contact.getId().xor(id).getPrefixLength();
+        int prefixLength = Contact.getPrefixLength(contact.xor(getNode()));
         ArrayList bucket = buckets[prefixLength];
         Contact found = null;
         for (int i = 0; i < bucket.size(); i++) {
             Contact el = (Contact) bucket.get(i);
-            if (el.getId().equals(id)) {
+            if (el.equals(getNode())) {
                 found = contact;
                 break;
             }
@@ -37,20 +37,20 @@ public class RoutingTable {
         }
     }
 
-    private void copyToVector(Iterator start, Contact end, ArrayList vector, NodeID target) {
+    private void copyToVector(Iterator start, Contact end, ArrayList vector, Contact target) {
         for (Iterator elt = start; elt.hasNext();) {
-            Contact value = (Contact) elt.next()
+            Contact value = (Contact) elt.next();
             if (value == end){
                 break;
             }
-            vector.add(0, new ContactRecord(value, value.getId().xor(target)));
+            vector.add(0, new ContactRecord(value, value.xor(target)));
         }
     }
     
-    public ArrayList findClosest(NodeID target, int count){
+    public ArrayList findClosest(Contact target, int count){
         ArrayList ret = new ArrayList<>();
         
-        int bucket_num = target.xor(this.id).getPrefixLength();
+        int bucket_num = Addressable.getPrefixLength(target.xor(this.getNode()));
         ArrayList bucket = buckets[bucket_num];
         copyToVector(bucket.iterator(), null, ret, target);
         
@@ -72,5 +72,13 @@ public class RoutingTable {
         }
         
         return ret;
+    }
+
+    public Contact getNode() {
+        return node;
+    }
+
+    public void setNode(Contact node) {
+        this.node = node;
     }
 }

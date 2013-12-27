@@ -1,20 +1,19 @@
-package com.exoself.corecom.dht;
+package com.exopolus.corecom.dht;
 
 import java.util.Random;
 
 import javax.xml.bind.DatatypeConverter;
 
-public class NodeID implements Comparable<NodeID> {
-    private byte[] id;
+public abstract class Addressable implements Comparable<Addressable> {
+    protected byte[] id;
     
-    protected NodeID() {
+    public Addressable() {
         id = createRandomId();
     }
-    
-    private NodeID(byte[] id){
+    protected Addressable(byte[] id) {
         this.id = id;
     }
-
+    
     private static byte[] createRandomId() {
         Random r = new Random();
         byte[] id = new byte[DHTConstants.ID_LENGTH];
@@ -23,16 +22,8 @@ public class NodeID implements Comparable<NodeID> {
         }
         return id;
     }
-
-    private static byte[] idFromString(String data) {
-        return DatatypeConverter.parseHexBinary(data);
-    }
-
-    private static String idToString(byte[] data) {
-        return DatatypeConverter.printHexBinary(data);
-    }
-
-    public boolean equals(NodeID other) {
+    
+    public boolean equals(Addressable other) {
         for (int i = 0; i < DHTConstants.ID_LENGTH; i++) {
             if (this.id[i] != other.id[i]) {
                 return false;
@@ -42,7 +33,7 @@ public class NodeID implements Comparable<NodeID> {
     }
 
     @Override
-    public int compareTo(NodeID other) {
+    public int compareTo(Addressable other) {
         for (int i = 0; i < DHTConstants.ID_LENGTH; i++) {
             if (this.id[i] != other.id[i]) {
                 if (this.id[i] < other.id[i]) {
@@ -55,19 +46,19 @@ public class NodeID implements Comparable<NodeID> {
         return 0;
     }
 
-    protected NodeID xor(NodeID other) {
+    protected byte[] xor(Addressable other) {
         byte[] id = new byte[DHTConstants.ID_LENGTH];
         for (int i = 0; i < DHTConstants.ID_LENGTH; i++) {
             id[i] = (byte) (this.id[i] ^ other.id[i]);
         }
-        return new NodeID(id);
+        return id;
     }
-    
-    protected int getPrefixLength(){
+
+    protected static int getPrefixLength(byte[] id) {
         for (int i = 0; i < DHTConstants.ID_LENGTH; i++) {
             for (int j = 0; j < 8; j++) {
                 // TODO: Is this right? \/\/\/\/\/\/\/\/\/\/
-                if (((this.id[i] >> (7 - j)) & 0x1) != 0){
+                if (((id[i] >> (7 - j)) & 0x1) != 0) {
                     return i * 8 + j;
                 }
             }
@@ -75,5 +66,15 @@ public class NodeID implements Comparable<NodeID> {
         return DHTConstants.ID_LENGTH * 8 - 1;
     }
     
+    private static byte[] idFromString(String data) {
+        return DatatypeConverter.parseHexBinary(data);
+    }
+
+    private static String idToString(byte[] data) {
+        return DatatypeConverter.printHexBinary(data);
+    }
     
+    public String getId() {
+        return idToString(id);
+    }
 }

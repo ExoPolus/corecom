@@ -1,4 +1,4 @@
-package com.exoself.corecom.dht;
+package com.exopolus.corecom.dht;
 
 public class DHTConstants {
     public static int ID_LENGTH = 20;
