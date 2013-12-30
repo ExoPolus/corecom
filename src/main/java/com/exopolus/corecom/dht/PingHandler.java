@@ -8,7 +8,7 @@ public class PingHandler extends MessageHandler<PingRequest, PingResponse>{
 
     @Override
     public void onMessage(PingRequest request, PingResponse response) {
-        System.out.println("**** Ping from " + request.sender.getId());
+        System.out.println("**** Ping from " + request.getSender().getId());
     }
 
 }

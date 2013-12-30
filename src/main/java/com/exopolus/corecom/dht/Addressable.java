@@ -32,7 +32,6 @@ public abstract class Addressable implements Comparable<Addressable> {
         return true;
     }
 
-    @Override
     public int compareTo(Addressable other) {
         for (int i = 0; i < DHTConstants.ID_LENGTH; i++) {
             if (this.id[i] != other.id[i]) {

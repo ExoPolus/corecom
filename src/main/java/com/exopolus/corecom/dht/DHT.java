@@ -7,61 +7,91 @@ import java.util.Random;
 import org.zeromq.ZMQ;
 
 public class DHT {
-    RoutingTable routes;
-    String networkId;
+	private RoutingTable routes;
+	private String networkId;
+	private int port;
 
-    public DHT(String networkId) {
-        this.routes = new RoutingTable(new Contact());
-        this.networkId = networkId;
-        ZMQ.Context context = ZMQ.context(1);
+	public DHT(String networkId) {
+		this.routes = new RoutingTable(new Contact());
+		this.networkId = networkId;
+		this.port = getAvailablePort();
+	}
 
-        //  Socket to talk to server
-        System.out.println("Connecting to hello world server");
+	public DHT(int port, String networkId) {
+		this.routes = new RoutingTable(new Contact());
+		this.networkId = networkId;
+		this.port = port;
+	}
 
-        ZMQ.Socket socket = context.socket(ZMQ.REQ);
-        String location = "tcp://localhost:" + getAvailablePort();
-        socket.connect(location);
+	public RoutingTable getRoutes() {
+		return routes;
+	}
 
-        for (int requestNbr = 0; requestNbr != 10; requestNbr++) {
-            String request = "Hello";
-            System.out.println("Sending Hello " + requestNbr);
-            socket.send(request.getBytes(ZMQ.CHARSET), 0);
+	public void setRoutes(RoutingTable routes) {
+		this.routes = routes;
+	}
 
-            byte[] reply = socket.recv(0);
-            System.out.println("Received " + new String(reply, ZMQ.CHARSET) + " " + requestNbr);
-        }
+	public String getNetworkId() {
+		return networkId;
+	}
 
-        socket.close();
-        context.term();
+	public void setNetworkId(String networkId) {
+		this.networkId = networkId;
+	}
 
-    }
+	public int getPort() {
+		return port;
+	}
 
-    private static int getAvailablePort() {
-        int port = 0;
-        do {
-            port = new Random().nextInt(20000) + 10000;
-        } while (!isPortAvailable(port));
+	public void setPort(int port) {
+		this.port = port;
+	}
 
-        return port;
-    }
+	public void attach() {
 
-    private static boolean isPortAvailable(final int port) {
-        ServerSocket ss = null;
-        try {
-            ss = new ServerSocket(port);
-            ss.setReuseAddress(true);
-            return true;
-        } catch (final IOException e) {
-        } finally {
-            if (ss != null) {
-                try {
-                    ss.close();
-                } catch (IOException e2) {
-                }
-            }
-        }
+		ZMQ.Context context = ZMQ.context(1);
 
-        return false;
-    }
+		// Socket to talk to clients
+		ZMQ.Socket responder = context.socket(ZMQ.REP);
+		responder.bind("tcp://*:" + getAvailablePort());
+
+		while (!Thread.currentThread().isInterrupted()) {
+			// Wait for next request from the client
+			byte[] request = responder.recv(0);
+
+			responder.send("OK".getBytes(), 0);
+		}
+		responder.close();
+		context.term();
+
+	}
+
+	private static int getAvailablePort() {
+		int port = 0;
+		do {
+			port = new Random().nextInt(20000) + 10000;
+		} while (!isPortAvailable(port));
+
+		return port;
+	}
+
+	private static boolean isPortAvailable(final int port) {
+		ServerSocket ss = null;
+		try {
+			ss = new ServerSocket(port);
+			ss.setReuseAddress(true);
+			return true;
+		} catch (final IOException e) {
+		} finally {
+			if (ss != null) {
+				try {
+					ss.close();
+				} catch (IOException e2) {
+				}
+			}
+		}
+
+		return false;
+	}
 
 }

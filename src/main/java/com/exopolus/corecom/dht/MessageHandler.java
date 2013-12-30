@@ -2,20 +2,21 @@ package com.exopolus.corecom.dht;
 
 public abstract class MessageHandler<T extends MessageHeader, P extends MessageHeader> {
     private DHT dht;
+    
     public MessageHandler(DHT dht) {
         this.dht = dht;
     }
     
     public void handleRequest(T request, P response){
-        if(!request.networkId.equals(this.getDHT().networkId)){
-            throw new DHTMessageException("Expected network ID " + this.getDHT().networkId + ", got " + request.networkId);
+        if(!request.getNetworkId().equals(this.getDHT().getNetworkId())){
+            throw new DHTMessageException("Expected network ID " + this.getDHT().getNetworkId() + ", got " + request.getNetworkId());
         }
         
-        if(request.sender != null){
-            this.getDHT().routes.update(request.sender);
+        if(request.getSender() != null){
+            this.getDHT().getRoutes().update(request.getSender());
         }
         
-        response.sender = this.getDHT().routes.getNode();
+        response.setSender(this.getDHT().getRoutes().getNode());
         onMessage(request, response);
         
     }
